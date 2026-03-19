@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>POS Online</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{font-family:sans-serif;padding:10px}
+input,button{padding:8px;margin:4px}
+.btn{display:block;margin:4px 0;padding:8px;background:#eee}
+</style>
+</head>
+<body>
+
+<h2>POS Bán Hàng Online</h2>
+
+<input id="search" placeholder="Tìm sản phẩm...">
+<div id="list"></div>
+
+<hr>
+
+<h3>Giỏ hàng</h3>
+<div id="cart"></div>
+<b>Tổng: <span id="total">0</span></b>
+
+<script>
+let DB = {KHO:[], HD:[]};
+let cartList = [];
+
+function renderAll(){
+  renderCart();
+}
+
+function renderCart(){
+  let el = document.getElementById("cart");
+  el.innerHTML="";
+  let s=0;
+  cartList.forEach((c,i)=>{
+    s += c.sl*c.gia;
+    let d=document.createElement("div");
+    d.innerHTML = c.ten + " x " + c.sl;
+    el.appendChild(d);
+  });
+  document.getElementById("total").innerText = s;
+}
+
+function addItem(h){
+  let found = cartList.find(x=>x.ma===h.ma);
+  if(found) found.sl++;
+  else cartList.push({...h, sl:1});
+  renderCart();
+}
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBiOxWb_AT3m5E-IL7FZh4c6Dmy-Fit7z8",
+  authDomain: "posbanhang2026.firebaseapp.com",
+  projectId: "posbanhang2026",
+  storageBucket: "posbanhang2026.firebasestorage.app",
+  messagingSenderId: "891822910902",
+  appId: "1:891822910902:web:39f8fdc785e2a915226517",
+};
+
+firebase.initializeApp(firebaseConfig);
+const dbCloud = firebase.firestore();
+
+async function saveDB(){
+  await dbCloud.collection("pos").doc("data").set(DB);
+}
+
+async function loadCloud(){
+  let snap = await dbCloud.collection("pos").doc("data").get();
+  if(snap.exists){
+    DB = snap.data();
+    renderAll();
+  }
+}
+
+dbCloud.collection("pos").doc("data")
+.onSnapshot((doc)=>{
+  if(doc.exists){
+    DB = doc.data();
+    renderAll();
+  }
+});
+
+loadCloud();
+</script>
+
+</body>
+</html>
